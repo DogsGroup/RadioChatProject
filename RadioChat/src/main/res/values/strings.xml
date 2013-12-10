@@ -3,7 +3,7 @@
 
     <string name="app_name">RadioChat</string>
     <string name="networkservice_name">RadioChatNetworking</string>
-    <string name="dummy_button">Dummy Button</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="dummy_button">Start/Stop Music</string>
+    <string name="dummy_content">DOGS\nMUSIC\nSTREAM\nVROOMMM</string>
 
 </resources>
