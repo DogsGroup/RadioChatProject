@@ -1,6 +1,7 @@
 package com.dogs.radiochat;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -34,18 +35,19 @@ public class NetworkService extends Activity {
     private static final String DEBUG_TAG = "HttpExample";
     private EditText urlText;
     private TextView textView;
-
+    private Context context;
+    private ProgressDialog pd;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_network_message);
-
+        context = this;
         textView = (TextView) findViewById(R.id.networkResultText);
         Intent intent = getIntent();
 
         String stringUrl = "http://ashok.caster.fm";
         ConnectivityManager connMgr = (ConnectivityManager)
-                getSystemService(Context.CONNECTIVITY_SERVICE);
+        getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
         if (networkInfo != null && networkInfo.isConnected()) {
             new DownloadWebpageTask().execute(stringUrl);
@@ -61,6 +63,15 @@ public class NetworkService extends Activity {
 
     }
 
+    @Override
+    protected void onDestroy() {
+        if (pd!=null) {
+            pd.dismiss();
+
+        }
+        super.onDestroy();
+    }
+
     // Uses AsyncTask to create a task away from the main UI thread. This task takes a
     // URL string and uses it to create an HttpUrlConnection. Once the connection
     // has been established, the AsyncTask downloads the contents of the webpage as
@@ -70,6 +81,15 @@ public class NetworkService extends Activity {
 
         String link = null;
 
+        @Override
+        protected void onPreExecute() {
+            pd = new ProgressDialog(context);
+            pd.setTitle("Connecting...");
+            pd.setMessage("Please wait.");
+            pd.setCancelable(false);
+            pd.setIndeterminate(true);
+            pd.show();
+        }
 
         @Override
         protected String doInBackground(String... urls) {
@@ -78,20 +98,29 @@ public class NetworkService extends Activity {
             try {
                 return downloadUrl(urls[0]);
             } catch (IOException e) {
+                pd.setMessage("Cannot connect to Server");
+                pd.setCancelable(false);
+                pd.setIndeterminate(true);
+                pd.show();
                 return "Unable to retrieve web page. URL may be invalid.";
             }
         }
         // onPostExecute displays the results of the AsyncTask.
         @Override
         protected void onPostExecute(String result) {
+            if(result == null) {
+                pd.setMessage("Cannot connect to Server");
+                pd.setCancelable(false);
+                pd.setIndeterminate(true);
+                pd.show();
+                result = "0";
+            }
             textView.setText(result);
             Intent newintent = new Intent();
             newintent.putExtra("RESULT", result);
             Log.v(this.getClass().getSimpleName(),result);
             setResult(Activity.RESULT_OK, newintent);
             finish();
-
-
         }
     }
 
@@ -140,14 +169,20 @@ public class NetworkService extends Activity {
 
             links.get(2).setBaseUri(myurl);
             link = links.get(2).attr("abs:href");
+            if ( link == null)
+                return null;
             Log.v(this.getClass().getName(), link);
             //link.getChars(48,121,data,0);
+            if (link.length() < 121)
+                return null;
             data = link.substring(84,121);
             ret_url = "http://shaincast.caster.fm:18255/listen.mp3?" + data;
             //ret_url.concat(data);
 
             data = data.replace('?',':');
             Log.v(this.getClass().getName(), ret_url);
+            if ( data == null)
+                return null;
             return ret_url;
             // Makes sure that the InputStream is closed after the app is
             // finished using it.

@@ -2,6 +2,9 @@ package com.dogs.radiochat;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -55,13 +58,15 @@ public class FullscreenActivity extends Activity {
     private static Boolean initDone = new Boolean(Boolean.FALSE);
     private static String streamUrl = null;
     private static MediaPlayer mMediaPlayer = new MediaPlayer(); // initialize it here
-
+    private Context context;
+    private static ProgressDialog pd;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_fullscreen);
-
+        context = this;
+        pd = new ProgressDialog(context);
         final View controlsView = findViewById(R.id.fullscreen_content_controls);
         final View contentView = findViewById(R.id.fullscreen_content);
 
@@ -208,14 +213,31 @@ public class FullscreenActivity extends Activity {
 
     public void streamMusic(String url)
     {
-        if ( mMediaPlayer.isPlaying() == Boolean.TRUE){
-            mMediaPlayer.stop();
-            mMediaPlayer.reset();
+
+
+        if ( url.compareTo("0") == 0) {
+            AlertDialog alertDialog1 = new AlertDialog.Builder(
+                    FullscreenActivity.this).create();
+
+            // Setting Dialog Title
+            alertDialog1.setTitle("Server Connection");
+
+            // Setting Dialog Message
+            alertDialog1.setMessage("No one is streaming");
+
+
+            alertDialog1.show();
             return;
         }
+        if (mMediaPlayer == null){
 
 
-
+            pd.setTitle("Streaming...");
+            pd.setMessage("Please wait.");
+            pd.setCancelable(false);
+            pd.setIndeterminate(true);
+            pd.show();
+            mMediaPlayer = new MediaPlayer();
             mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             try {
                 mMediaPlayer.setDataSource(url);
@@ -229,6 +251,21 @@ public class FullscreenActivity extends Activity {
                 e.printStackTrace();
             }
             mMediaPlayer.start(); // prepare async to not block main thread
-        Log.v(this.getLocalClassName(),"button over");
+            pd.dismiss();
+        }
+        else if ( mMediaPlayer.isPlaying()){
+            mMediaPlayer.stop();
+            mMediaPlayer.reset();
+            mMediaPlayer.release();
+            mMediaPlayer = null;
+            return;
+        }
+        else {
+            mMediaPlayer.start();
+        }
+
+
+
+        Log.v(this.getLocalClassName(), "button over");
     }
 }
