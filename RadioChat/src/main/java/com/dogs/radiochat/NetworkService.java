@@ -166,7 +166,9 @@ public class NetworkService extends Activity {
             //return contentAsString;
             Document doc = Jsoup.parse(html.toString());
             Elements links = doc.select("a[href]");
-
+            if ( links != null || links.size() < 3){
+                return null;
+            }
             links.get(2).setBaseUri(myurl);
             link = links.get(2).attr("abs:href");
             if ( link == null)
