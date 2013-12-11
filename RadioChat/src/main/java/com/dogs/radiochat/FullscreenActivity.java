@@ -14,6 +14,7 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.EditText;
 
 import com.dogs.radiochat.util.SystemUiHider;
 
@@ -57,9 +58,10 @@ public class FullscreenActivity extends Activity {
     private static Boolean playing = new Boolean(Boolean.FALSE);
     private static Boolean initDone = new Boolean(Boolean.FALSE);
     private static String streamUrl = null;
-    private static MediaPlayer mMediaPlayer = new MediaPlayer(); // initialize it here
+    private static MediaPlayer mMediaPlayer = null;//new MediaPlayer(); // initialize it here
     private Context context;
     private static ProgressDialog pd;
+    private static EditText urlTextBox;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,8 +69,10 @@ public class FullscreenActivity extends Activity {
         setContentView(R.layout.activity_fullscreen);
         context = this;
         pd = new ProgressDialog(context);
+        urlTextBox = (EditText)findViewById(R.id.directUrlTextBox);
         final View controlsView = findViewById(R.id.fullscreen_content_controls);
         final View contentView = findViewById(R.id.fullscreen_content);
+
 
         // Set up an instance of SystemUiHider to control the system UI for
         // this activity.
@@ -192,6 +196,14 @@ public class FullscreenActivity extends Activity {
         startActivityForResult(intent, 0);
     }
 
+    public void directLinkServer(View view)
+    {
+        if (urlTextBox.getText().length() > 5)
+        {
+            streamUrl = urlTextBox.getText().toString();
+            streamMusic(streamUrl);
+        }
+    }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intentResult) {
 
@@ -214,7 +226,7 @@ public class FullscreenActivity extends Activity {
     public void streamMusic(String url)
     {
 
-
+        ProgressDialog pd;
         if ( url.compareTo("0") == 0) {
             AlertDialog alertDialog1 = new AlertDialog.Builder(
                     FullscreenActivity.this).create();
@@ -223,7 +235,7 @@ public class FullscreenActivity extends Activity {
             alertDialog1.setTitle("Server Connection");
 
             // Setting Dialog Message
-            alertDialog1.setMessage("No one is streaming");
+            alertDialog1.setMessage("Oops! No one is streaming");
 
 
             alertDialog1.show();
@@ -231,10 +243,11 @@ public class FullscreenActivity extends Activity {
         }
         if (mMediaPlayer == null){
 
-
+            Log.v(this.getClass().getName(),"Opening" + url);
+            pd = new ProgressDialog(this.context);
             pd.setTitle("Streaming...");
             pd.setMessage("Please wait.");
-            pd.setCancelable(false);
+            pd.setCancelable(true);
             pd.setIndeterminate(true);
             pd.show();
             mMediaPlayer = new MediaPlayer();

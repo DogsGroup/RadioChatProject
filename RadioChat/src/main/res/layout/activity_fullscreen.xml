@@ -51,6 +51,29 @@
 
         </LinearLayout>
 
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="fill_parent"
+            android:layout_height="471dp"
+            android:layout_gravity="left|top"
+            android:visibility="visible">
+
+            <Button
+                style="?buttonBarButtonStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Direct Link Connect"
+                android:id="@+id/button2"
+                android:onClick="directLinkServer"
+                android:textColor="#000000" />
+
+            <EditText
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/directUrlTextBox"
+                android:textColor="#000000" />
+        </LinearLayout>
+
 
     </FrameLayout>
 

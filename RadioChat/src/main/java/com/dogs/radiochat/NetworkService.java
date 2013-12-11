@@ -93,10 +93,16 @@ public class NetworkService extends Activity {
 
         @Override
         protected String doInBackground(String... urls) {
-
+            String ret;
             // params comes from the execute() call: params[0] is the url.
             try {
-                return downloadUrl(urls[0]);
+                ret = downloadUrl(urls[0]);
+                 if (ret  == null)
+                 {
+                     return "http://s6.myradiostream.com:5804";
+                 }
+                else
+                     return ret;
             } catch (IOException e) {
                 pd.setMessage("Cannot connect to Server");
                 pd.setCancelable(false);
@@ -104,6 +110,7 @@ public class NetworkService extends Activity {
                 pd.show();
                 return "Unable to retrieve web page. URL may be invalid.";
             }
+
         }
         // onPostExecute displays the results of the AsyncTask.
         @Override
