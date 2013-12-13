@@ -173,7 +173,8 @@ public class NetworkService extends Activity {
             //return contentAsString;
             Document doc = Jsoup.parse(html.toString());
             Elements links = doc.select("a[href]");
-            if ( links != null || links.size() < 3){
+            Log.v(this.getClass().getName(), "link size=" + links.size());
+            if ( links == null || links.size() < 3){
                 return null;
             }
             links.get(2).setBaseUri(myurl);

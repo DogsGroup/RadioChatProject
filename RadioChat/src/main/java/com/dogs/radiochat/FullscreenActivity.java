@@ -20,6 +20,8 @@ import com.dogs.radiochat.util.SystemUiHider;
 
 import java.io.IOException;
 
+import static android.media.MediaPlayer.OnPreparedListener;
+
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
@@ -68,7 +70,6 @@ public class FullscreenActivity extends Activity {
 
         setContentView(R.layout.activity_fullscreen);
         context = this;
-        pd = new ProgressDialog(context);
         urlTextBox = (EditText)findViewById(R.id.directUrlTextBox);
         final View controlsView = findViewById(R.id.fullscreen_content_controls);
         final View contentView = findViewById(R.id.fullscreen_content);
@@ -225,9 +226,7 @@ public class FullscreenActivity extends Activity {
 
     public void streamMusic(String url)
     {
-
-        ProgressDialog pd;
-        if ( url.compareTo("0") == 0) {
+      if ( url.compareTo("0") == 0) {
             AlertDialog alertDialog1 = new AlertDialog.Builder(
                     FullscreenActivity.this).create();
 
@@ -239,12 +238,13 @@ public class FullscreenActivity extends Activity {
 
 
             alertDialog1.show();
+
             return;
         }
         if (mMediaPlayer == null){
 
             Log.v(this.getClass().getName(),"Opening" + url);
-            pd = new ProgressDialog(this.context);
+            pd = new ProgressDialog(context);
             pd.setTitle("Streaming...");
             pd.setMessage("Please wait.");
             pd.setCancelable(true);
@@ -257,14 +257,32 @@ public class FullscreenActivity extends Activity {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            mMediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+                @Override
+                public boolean onError(MediaPlayer mediaPlayer, int i, int i2) {
+                    if(pd !=null)
+                        pd.dismiss();
+                    AlertDialog alertDialog1 = new AlertDialog.Builder(
+                            FullscreenActivity.this).create();
 
-            try {
-                mMediaPlayer.prepare();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            mMediaPlayer.start(); // prepare async to not block main thread
-            pd.dismiss();
+                    // Setting Dialog Title
+                    alertDialog1.setTitle("Playing...");
+
+                    // Setting Dialog Message
+                    alertDialog1.setMessage("Oops! No one is streaming");
+                    alertDialog1.show();
+                    mMediaPlayer = null;
+                    return false;
+                }
+            });
+            mMediaPlayer.setOnPreparedListener(new OnPreparedListener() {
+                @Override
+                public void onPrepared(MediaPlayer mp) {
+                    mp.start();
+                    pd.dismiss();
+                }
+            });
+           mMediaPlayer.prepareAsync();
         }
         else if ( mMediaPlayer.isPlaying()){
             mMediaPlayer.stop();
@@ -276,9 +294,8 @@ public class FullscreenActivity extends Activity {
         else {
             mMediaPlayer.start();
         }
-
-
-
         Log.v(this.getLocalClassName(), "button over");
     }
+
+
 }
