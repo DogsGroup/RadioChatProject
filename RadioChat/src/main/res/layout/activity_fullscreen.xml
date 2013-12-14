@@ -72,6 +72,13 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/directUrlTextBox"
                 android:textColor="#000000" />
+
+            <ListView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/ui_streamSrcList"
+                android:layout_gravity="center_horizontal"
+                android:choiceMode="singleChoice" />
         </LinearLayout>
 
 

@@ -14,11 +14,15 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ListView;
 
 import com.dogs.radiochat.util.SystemUiHider;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import static android.media.MediaPlayer.OnPreparedListener;
 
@@ -64,6 +68,13 @@ public class FullscreenActivity extends Activity {
     private Context context;
     private static ProgressDialog pd;
     private static EditText urlTextBox;
+    private static ListView srcStreamListView;
+    //LIST OF ARRAY STRINGS WHICH WILL SERVE AS LIST ITEMS
+    ArrayList<String> srcStreamList = new ArrayList<String>();
+
+    //DEFINING A STRING ADAPTER WHICH WILL HANDLE THE DATA OF THE LISTVIEW
+    ArrayAdapter<String> srcStreamAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,8 +84,19 @@ public class FullscreenActivity extends Activity {
         urlTextBox = (EditText)findViewById(R.id.directUrlTextBox);
         final View controlsView = findViewById(R.id.fullscreen_content_controls);
         final View contentView = findViewById(R.id.fullscreen_content);
+        srcStreamListView = (ListView)findViewById(R.id.ui_streamSrcList);
 
-
+        srcStreamAdapter=new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,
+                srcStreamList);
+        srcStreamListView.setAdapter(srcStreamAdapter);
+        srcStreamList.add(0,"http://dogsgroup.mooo.com:8000/ashok.mp3");
+        srcStreamList.add(1,"http://s6.myradiostream.com:5804");
+        srcStreamListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                urlTextBox.setText(srcStreamList.get(i));
+            }
+        });
         // Set up an instance of SystemUiHider to control the system UI for
         // this activity.
         mSystemUiHider = SystemUiHider.getInstance(this, contentView, HIDER_FLAGS);
