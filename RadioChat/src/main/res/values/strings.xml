@@ -5,5 +5,11 @@
     <string name="networkservice_name">RadioChatNetworking</string>
     <string name="dummy_button">Start/Stop Music</string>
     <string name="dummy_content">DOGS\nMUSIC\nSTREAM\nVROOMMM</string>
+    <string name="Basha">Name</string>
+    <string name="title_activity_chat">ChatActivity</string>
+    <string name="title_section1">Section 1</string>
+    <string name="title_section2">Section 2</string>
+    <string name="title_section3">Section 3</string>
+    <string name="action_settings">Settings</string>
 
 </resources>

@@ -57,31 +57,52 @@
             android:layout_height="471dp"
             android:layout_gravity="left|top"
             android:visibility="visible">
+            <!--
+                        <Button
+                            style="?buttonBarButtonStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Direct Link Connect"
+                            android:id="@+id/button2"
+                            android:onClick="directLinkServer"
+                            android:textColor="#000000" />
 
+                        <EditText
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:id="@+id/directUrlTextBox"
+                            android:textColor="#000000" />
+            -->
+            <!--
             <Button
                 style="?buttonBarButtonStyle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Direct Link Connect"
-                android:id="@+id/button2"
-                android:onClick="directLinkServer"
-                android:textColor="#000000" />
-
-            <EditText
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:text="Chat Window"
+                android:onClick="connectChatWindow"
+                android:id="@+id/ui_chatview" />
+-->
+            <TextView
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/directUrlTextBox"
-                android:textColor="#000000" />
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="Status"
+                android:id="@+id/statusText" />
 
             <ListView
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="329dp"
                 android:id="@+id/ui_streamSrcList"
-                android:layout_gravity="center_horizontal"
-                android:choiceMode="singleChoice" />
+                android:choiceMode="singleChoice"
+                android:smoothScrollbar="true"
+                android:scrollingCache="true"
+                android:headerDividersEnabled="@bool/abc_action_bar_embed_tabs_pre_jb"
+                android:footerDividersEnabled="false"
+                android:stackFromBottom="true"
+                android:transcriptMode="alwaysScroll" />
         </LinearLayout>
 
 
-    </FrameLayout>
+                </FrameLayout>
 
 </FrameLayout>

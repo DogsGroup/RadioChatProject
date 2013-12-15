@@ -45,6 +45,7 @@ public class NetworkService extends Activity {
         textView = (TextView) findViewById(R.id.networkResultText);
         Intent intent = getIntent();
 
+
         String stringUrl = "http://ashok.caster.fm";
         ConnectivityManager connMgr = (ConnectivityManager)
         getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -96,10 +97,12 @@ public class NetworkService extends Activity {
             String ret;
             // params comes from the execute() call: params[0] is the url.
             try {
+                //FullscreenActivity.xmppconnect.connect();
+
                 ret = downloadUrl(urls[0]);
                  if (ret  == null)
                  {
-                     return "http://s6.myradiostream.com:5804";
+                     return "http://dogsgroup.mooo.com:8000/ashok.mp3";
                  }
                 else
                      return ret;
