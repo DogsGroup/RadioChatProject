@@ -292,7 +292,12 @@ public class FullscreenActivity extends Activity {
             mMediaPlayer.reset();
             mMediaPlayer.release();
             mMediaPlayer = null;
-            statusText.setText("status:Music stopped");
+            mHandler.post(new Runnable() {
+                public void run() {
+                    setStatus("status:Music stopped");
+                }
+            });
+
         }
 
     }
@@ -357,7 +362,11 @@ public class FullscreenActivity extends Activity {
                 public void onPrepared(MediaPlayer mp) {
                     mp.start();
                     pd.dismiss();
-                    statusText.setText("status: Playing..");
+                    mHandler.post(new Runnable() {
+                        public void run() {
+                            setStatus("status: Playing..");
+                        }
+                    });
                 }
             });
            mMediaPlayer.prepareAsync();
@@ -367,7 +376,11 @@ public class FullscreenActivity extends Activity {
             mMediaPlayer.reset();
             mMediaPlayer.release();
             mMediaPlayer = null;
-            statusText.setText("status: Stopped");
+            mHandler.post(new Runnable() {
+                public void run() {
+                    setStatus("status: Stopped..");
+                }
+            });
             return;
         }
         else {
@@ -436,6 +449,10 @@ public class FullscreenActivity extends Activity {
         srcStreamListView.setAdapter(adapter);
     }
 
+    private void setStatus(String status)
+    {
+        statusText.setText(status);
+    }
     public void xmppconnect() {
 
          final String HOST = "dogsgroup.mooo.com";
@@ -448,6 +465,8 @@ public class FullscreenActivity extends Activity {
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
+
+
                 // Create a connection
                 ConnectionConfiguration connConfig = new ConnectionConfiguration(HOST, PORT, SERVICE);
                 XMPPConnection connection = new XMPPConnection(connConfig);
@@ -487,12 +506,21 @@ public class FullscreenActivity extends Activity {
                         if (type == Presence.Type.available)
                             Log.d("XMPPChatDemoActivity", "Presence AVIALABLE");
                         Log.d("XMPPChatDemoActivity", "Presence : " + entryPresence);
-                        statusText.setText("status:Chat online");
+                        mHandler.post(new Runnable() {
+                            public void run() {
+                                setStatus("status:Chat online");
+                                }
+                        });
+
                     }
                 } catch (XMPPException ex) {
                     Log.e("XMPPChatDemoActivity", "Failed to log in as "+  USERNAME);
                     Log.e("XMPPChatDemoActivity", ex.toString());
-                    statusText.setText("status:Chat server failed");
+                    mHandler.post(new Runnable() {
+                        public void run() {
+                            setStatus("status:Chat server failed");
+                        }
+                    });
                     setConnection(null);
                 }
                 dialog.dismiss();
