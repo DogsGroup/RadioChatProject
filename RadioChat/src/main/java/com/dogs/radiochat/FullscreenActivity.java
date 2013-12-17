@@ -8,6 +8,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -35,7 +37,14 @@ import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.util.StringUtils;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -87,6 +96,9 @@ public class FullscreenActivity extends Activity {
     private static EditText urlTextBox;
     private static ListView srcStreamListView;
     private static TextView statusText;
+
+    private static String sUsername;
+    private static String sPassword;
 
     private Handler mHandler = new Handler();
 
@@ -185,7 +197,7 @@ public class FullscreenActivity extends Activity {
         findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
 
         //Connect xmpp
-        xmppconnect();
+        xmppGetLogin();
 
     }
 
@@ -196,6 +208,7 @@ public class FullscreenActivity extends Activity {
         // Trigger the initial hide() shortly after the activity has been
         // created, to briefly hint to the user that UI controls
         // are available.
+        // just a dummy
         delayedHide(100);
     }
 
@@ -246,7 +259,7 @@ public class FullscreenActivity extends Activity {
 
     public void connectToServer(View view)
     {
-        xmppconnect();
+        xmppGetLogin();
         Intent intent = new Intent(this, NetworkService.class);
         startActivityForResult(intent, 0);
     }
@@ -262,27 +275,10 @@ public class FullscreenActivity extends Activity {
 
     public void connectChatWindow(View view)
     {
-        xmppconnect();
+        xmppGetLogin();
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent intentResult) {
 
-        String Result = intentResult.getStringExtra("RESULT");
-        streamUrl = Result;
-        streamMusic(Result);
-        Log.v(this.getClass().getSimpleName(),"Got IT ! gotcha !!!!" + Result);
-        // Check which request we're responding to
-        if (requestCode == 0) {
-            // Make sure the request was successful
-            if (resultCode == RESULT_OK) {
-                // The user picked a contact.
-                // The Intent's data Uri identifies which contact was selected.
-
-                // Do something with the contact here (bigger example below)
-            }
-        }
-    }
 
     public void stopMusic()
     {
@@ -453,15 +449,30 @@ public class FullscreenActivity extends Activity {
     {
         statusText.setText(status);
     }
-    public void xmppconnect() {
+
+    public void xmppGetLogin()
+    {
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivityForResult(intent, 2);
+    }
+
+    public void xmppTryReLogin()
+    {
+        if ( xmppconnection != null) {
+            if (!xmppconnection.isConnected()){
+                xmppconnect(sUsername,"example.com",sPassword);
+            }
+        }
+    }
+
+    public void xmppconnect(final String USERNAME, final String SERVICE, final String PASSWORD) {
 
          final String HOST = "dogsgroup.mooo.com";
          final int PORT = 5222;
-         final String SERVICE = "example.com";
-         final String USERNAME = "babu";
-         final String PASSWORD = "babu";
 
         final ProgressDialog dialog = ProgressDialog.show(this, "Connecting...", "Please wait...", false);
+
+
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -470,12 +481,13 @@ public class FullscreenActivity extends Activity {
                 // Create a connection
                 ConnectionConfiguration connConfig = new ConnectionConfiguration(HOST, PORT, SERVICE);
                 XMPPConnection connection = new XMPPConnection(connConfig);
+
                 try {
                     connection.connect();
-                    Log.i("XMPPChatDemoActivity",  "[SettingsDialog] Connected to "+connection.getHost());
+                    Log.i("XMPP",  "[SettingsDialog] Connected to "+connection.getHost());
                 } catch (XMPPException ex) {
-                    Log.e("XMPPChatDemoActivity",  "[SettingsDialog] Failed to connect to "+ connection.getHost());
-                    Log.e("XMPPChatDemoActivity", ex.toString());
+                    Log.e("XMPP",  "[SettingsDialog] Failed to connect to "+ connection.getHost());
+                    Log.e("XMPP", ex.toString());
                     setConnection(null);
                 }
                 try {
@@ -491,21 +503,21 @@ public class FullscreenActivity extends Activity {
                     Collection<RosterEntry> entries = roster.getEntries();
                     for (RosterEntry entry : entries) {
 
-                        Log.d("XMPPChatDemoActivity",  "--------------------------------------");
-                        Log.d("XMPPChatDemoActivity", "RosterEntry " + entry);
-                        Log.d("XMPPChatDemoActivity", "User: " + entry.getUser());
-                        Log.d("XMPPChatDemoActivity", "Name: " + entry.getName());
-                        Log.d("XMPPChatDemoActivity", "Status: " + entry.getStatus());
-                        Log.d("XMPPChatDemoActivity", "Type: " + entry.getType());
+                        Log.d("XMPP",  "--------------------------------------");
+                        Log.d("XMPP", "RosterEntry " + entry);
+                        Log.d("XMPP", "User: " + entry.getUser());
+                        Log.d("XMPP", "Name: " + entry.getName());
+                        Log.d("XMPP", "Status: " + entry.getStatus());
+                        Log.d("XMPP", "Type: " + entry.getType());
                         Presence entryPresence = roster.getPresence(entry.getUser());
 
-                        Log.d("XMPPChatDemoActivity", "Presence Status: "+ entryPresence.getStatus());
-                        Log.d("XMPPChatDemoActivity", "Presence Type: " + entryPresence.getType());
+                        Log.d("XMPP", "Presence Status: "+ entryPresence.getStatus());
+                        Log.d("XMPP", "Presence Type: " + entryPresence.getType());
 
                         Presence.Type type = entryPresence.getType();
                         if (type == Presence.Type.available)
-                            Log.d("XMPPChatDemoActivity", "Presence AVIALABLE");
-                        Log.d("XMPPChatDemoActivity", "Presence : " + entryPresence);
+                            Log.d("XMPP", "Presence AVIALABLE");
+                        Log.d("XMPP", "Presence : " + entryPresence);
                         mHandler.post(new Runnable() {
                             public void run() {
                                 setStatus("status:Chat online");
@@ -514,8 +526,8 @@ public class FullscreenActivity extends Activity {
 
                     }
                 } catch (XMPPException ex) {
-                    Log.e("XMPPChatDemoActivity", "Failed to log in as "+  USERNAME);
-                    Log.e("XMPPChatDemoActivity", ex.toString());
+                    Log.e("XMPP", "Failed to log in as "+  USERNAME);
+                    Log.e("XMPP", ex.toString());
                     mHandler.post(new Runnable() {
                         public void run() {
                             setStatus("status:Chat server failed");
@@ -529,4 +541,161 @@ public class FullscreenActivity extends Activity {
         t.start();
         dialog.show();
     }
+
+    private int doFileUpload(String selectedPath){
+        HttpURLConnection conn = null;
+        DataOutputStream dos = null;
+        DataInputStream inStream = null;
+        String lineEnd = "\r\n";
+        String twoHyphens = "--";
+        String boundary =  "*****";
+        int bytesRead, bytesAvailable, bufferSize;
+        byte[] buffer;
+        int maxBufferSize = 4*1024*1024;
+        String responseFromServer = "";
+        String urlString = "http://dogsgroup.mooo.com:8080/uploader.php";
+        try
+        {
+            //------------------ CLIENT REQUEST
+            FileInputStream fileInputStream = new FileInputStream(new File(selectedPath) );
+            // open a URL connection to the Servlet
+            URL url = new URL(urlString);
+
+            String data;
+            // Open a HTTP connection to the URL
+            conn = (HttpURLConnection) url.openConnection();
+            // Allow Inputs
+            conn.setDoInput(true);
+            // Allow Outputs
+            conn.setDoOutput(true);
+            // Don't use a cached copy.
+            conn.setUseCaches(false);
+            // Use a post method.
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Connection", "Keep-Alive");
+            conn.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
+            dos = new DataOutputStream( conn.getOutputStream() );
+            dos.writeBytes(twoHyphens + boundary + lineEnd);
+            data = "Content-Disposition: form-data; name=\"uploadedfile\"; filename=\"" + selectedPath + "\"" + lineEnd;
+            Log.e("Debug","post message : " + data);
+            dos.writeBytes(data);
+            dos.writeBytes(lineEnd);
+            // create a buffer of maximum size
+            bytesAvailable = fileInputStream.available();
+            bufferSize = Math.min(bytesAvailable, maxBufferSize);
+            buffer = new byte[bufferSize];
+            // read file and write it into form...
+            bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+            Log.e("Debug","filename: " + selectedPath + "size : " + bytesRead);
+            while (bytesRead > 0)
+            {
+                dos.write(buffer, 0, bufferSize);
+                bytesAvailable = fileInputStream.available();
+                bufferSize = Math.min(bytesAvailable, maxBufferSize);
+                bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+            }
+            // send multipart form data necesssary after file data...
+            dos.writeBytes(lineEnd);
+            dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
+
+            // close streams
+            Log.e("Debug","File is written");
+            fileInputStream.close();
+            dos.flush();
+            dos.close();
+        }
+        catch (MalformedURLException ex)
+        {
+            Log.e("Debug", "error: " + ex.getMessage(), ex);
+        }
+        catch (IOException ioe)
+        {
+            Log.e("Debug", "error: " + ioe.getMessage(), ioe);
+        }
+        //------------------ read the SERVER RESPONSE
+        try {
+            inStream = new DataInputStream ( conn.getInputStream() );
+            String str;
+
+            while (( str = inStream.readLine()) != null)
+            {
+                Log.e("Debug","Server Response "+str);
+            }
+            inStream.close();
+
+        }
+        catch (IOException ioex){
+            Log.e("Debug", "error: " + ioex.getMessage(), ioex);
+        }
+
+        return 0;
+    }
+
+    private class UploadMusicStream extends AsyncTask<String, Void, Integer> {
+
+        @Override
+        protected Integer doInBackground(String... urls) {
+            int ret;
+            ret = doFileUpload(urls[0]);
+            return ret;
+        }
+
+    }
+
+    public void uploadToServer(View view)
+    {
+        Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+        i.setType("*/*");
+        startActivityForResult(i, 1);
+
+        //String url = "/sdcard/music_download/Radioactive.mp3";
+        //new UploadMusicStream().execute(url);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent intentResult) {
+
+        String Result;
+
+        // Check which request we're responding to
+        if (requestCode == 0) {
+            Result = intentResult.getStringExtra("RESULT");
+            streamUrl = Result;
+            streamMusic(Result);
+            Log.v(this.getClass().getSimpleName(),"Got IT ! gotcha !!!!" + Result);
+            // Make sure the request was successful
+            if (resultCode == RESULT_OK) {
+                // The user picked a contact.
+                // The Intent's data Uri identifies which contact was selected.
+
+                // Do something with the contact here (bigger example below)
+            }
+        }
+        else if (requestCode == 1){
+            if(intentResult == null)
+                return;
+            Uri uri = intentResult.getData();
+            Log.d("debug", "File Uri: " + uri.toString());
+            // Get the path
+            String path = uri.getPath();
+            if (path == null)
+                return;
+            Log.d("debug", "File Path: " + path);
+            new UploadMusicStream().execute(path);
+            xmppTryReLogin();
+        }
+        else if (requestCode == 2){
+            if (intentResult == null)
+                return;
+
+            Bundle extras = intentResult.getExtras();
+            String username_string = extras.getString("EXTRA_USERNAME");
+            String password_string = extras.getString("EXTRA_PASSWORD");
+            sUsername = extras.getString("EXTRA_USERNAME");
+            sPassword = extras.getString("EXTRA_PASSWORD");
+            xmppconnect(username_string,"example.com",password_string);
+
+        }
+    }
+
 }
