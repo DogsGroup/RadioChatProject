@@ -20,10 +20,19 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.dogs.radiochat.util.SystemUiHider;
 import com.dogs.radiochat.util.XmppService;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.Roster;
@@ -44,6 +53,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -459,7 +470,7 @@ public class FullscreenActivity extends Activity {
     public void xmppTryReLogin()
     {
         if ( xmppconnection != null) {
-            if (!xmppconnection.isConnected()){
+            if (!xmppconnection.isConnected() || xmppconnection.isSocketClosed()){
                 Log.d("debug","Checking for relogin");
                 xmppconnect(sUsername,"example.com",sPassword);
             }
@@ -543,6 +554,16 @@ public class FullscreenActivity extends Activity {
         dialog.show();
     }
 
+    public void showToast(final String toast, final Integer duration)
+    {
+        runOnUiThread(new Runnable() {
+            public void run()
+            {
+                Toast.makeText(getApplicationContext(), toast, duration).show();
+            }
+        });
+    }
+
     private int doFileUpload(String selectedPath){
         HttpURLConnection conn = null;
         DataOutputStream dos = null;
@@ -554,8 +575,8 @@ public class FullscreenActivity extends Activity {
         byte[] buffer;
         int maxBufferSize = 4*1024*1024;
         String responseFromServer = "";
-        String urlString = "http://dogsgroup.mooo.com:8080/uploader.php";
-
+        //String urlString = "http://dogsgroup.mooo.com:8080/uploader.php";
+        String urlString = "http://dogsgroup.mooo.com:8080";
         try
         {
             //------------------ CLIENT REQUEST
@@ -564,6 +585,7 @@ public class FullscreenActivity extends Activity {
             URL url = new URL(urlString);
 
             String data;
+            /*
             // Open a HTTP connection to the URL
             conn = (HttpURLConnection) url.openConnection();
             // Allow Inputs
@@ -582,7 +604,40 @@ public class FullscreenActivity extends Activity {
             Log.e("Debug","post message : " + data);
             dos.writeBytes(data);
             dos.writeBytes(lineEnd);
+
+
+            conn.setDoOutput(true);
+            conn.setRequestMethod("PUT");
+            OutputStreamWriter out = new OutputStreamWriter(
+                    conn.getOutputStream());
+            */
+            //out.write(
+            //out.close();
             // create a buffer of maximum size
+            HttpClient httpclient = new DefaultHttpClient();
+            HttpPut httpput = new HttpPut(new URI(urlString));
+            File file = new File(selectedPath);
+            if ( file == null)
+                Log.d("debug", "file cannot be found");
+            FileBody fb = new FileBody(file);
+            Log.d("debug", "File media type : " + fb.getMimeType());
+
+            MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+            builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+            builder.addPart("file", fb);
+
+            builder.setMode(HttpMultipartMode.STRICT);
+            httpput.setEntity(builder.build());
+
+            showToast("Broadcasting !!!", Toast.LENGTH_LONG);
+
+
+            HttpResponse response = httpclient.execute(httpput);
+            HttpEntity resEntity = response.getEntity();
+            resEntity.consumeContent();
+            httpclient.getConnectionManager().shutdown();
+            showToast("Broadcasting done!!!", Toast.LENGTH_SHORT);
+            /*
             bytesAvailable = fileInputStream.available();
             bufferSize = Math.min(bytesAvailable, maxBufferSize);
             buffer = new byte[bufferSize];
@@ -605,17 +660,24 @@ public class FullscreenActivity extends Activity {
             fileInputStream.close();
             dos.flush();
             dos.close();
+            */
         }
         catch (MalformedURLException ex)
         {
             Log.e("Debug", "error: " + ex.getMessage(), ex);
+            return -1;
         }
         catch (IOException ioe)
         {
             Log.e("Debug", "error: " + ioe.getMessage(), ioe);
+            return -1;
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+            Log.e("Debug", "error: " + e.getMessage(), e);
+            return -1;
         }
         //------------------ read the SERVER RESPONSE
-        try {
+        /*try {
             inStream = new DataInputStream ( conn.getInputStream() );
             String str;
 
@@ -629,7 +691,7 @@ public class FullscreenActivity extends Activity {
         catch (IOException ioex){
             Log.e("Debug", "error: " + ioex.getMessage(), ioex);
         }
-
+        */
         return 0;
     }
 
@@ -638,24 +700,39 @@ public class FullscreenActivity extends Activity {
         ProgressDialog pd;
         @Override
         protected void onPreExecute() {
+            /*
             pd = new ProgressDialog(context);
             pd.setTitle("Broadcasting...");
             pd.setMessage("Please wait.");
             pd.setCancelable(false);
             pd.setIndeterminate(true);
             pd.show();
+            */
         }
 
         @Override
         protected Integer doInBackground(String... urls) {
             int ret;
             ret = doFileUpload(urls[0]);
+            if ( ret != 0) {
+                AlertDialog alertDialog1 = new AlertDialog.Builder(
+                        FullscreenActivity.this).create();
+
+                // Setting Dialog Title
+                alertDialog1.setTitle("Server Connection");
+
+                // Setting Dialog Message
+                alertDialog1.setMessage("Oops! Cannot broadcast");
+
+
+                alertDialog1.show();
+            }
             return ret;
         }
 
         @Override
         protected void onPostExecute(Integer result) {
-            pd.dismiss();
+            //pd.dismiss();
         }
 
     }
